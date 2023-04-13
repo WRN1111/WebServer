@@ -7,6 +7,12 @@
 
 Server::Server(int port, bool OptLinger) {
     if (!InitSocket()) { _isClose = true; }
+
+}
+
+Server::~Server() {
+    close(_listenFd);
+    _isClose = true;
 }
 
 //创建监听FD
@@ -62,5 +68,13 @@ bool Server::InitSocket() {
         return false;
     }
 //    将_listenFd 加入epoll中
-
+    ret = _epoll->AddFd(_listenFd, EPOLLIN | EPOLLHUP);
+    if (ret == 0) {
+        perror("add listen error");
+        close(_listenFd);
+        return false;
+    }
+//    设置非阻塞 以便accept时不阻塞
+    fcntl(_listenFd, F_SETFL, fcntl(_listenFd, F_GETFD, 0) | O_NONBLOCK);
+    return true;
 }

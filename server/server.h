@@ -5,10 +5,14 @@
 #ifndef LINUX_SERVER_H
 #define LINUX_SERVER_H
 
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <cstdio>
 #include "arpa/inet.h"
 #include <unistd.h>
+#include <memory>
+#include "epoll/epoll.h"
+#include <fcntl.h>
 
 class Server {
 public:
@@ -25,9 +29,9 @@ private:
 
     bool _isLinger;
 
-    unsigned int _listenFd;
-
-
+    int _listenFd;
+    std::unique_ptr<Epoll> _epoll;
+    uint32_t _listenEvent;
 };
 
 #endif //LINUX_SERVER_H
