@@ -19,6 +19,21 @@ public:
 //  将fd添加进epoll 并设立监听事件
     bool AddFd(int fd, uint32_t events);
 
+//  修改epoll中的事件
+    bool ModFd(int fd, uint32_t events);
+
+//  删除epoll中的事件
+    bool DelFd(int fd);
+
+//  epoll_wait()
+    int Wait();
+
+//  获取eventFd 用来判断新请求还是读写事件
+    int GetEventFd(size_t i);
+
+//    获取事件
+    uint32_t GetEvents(int i);
+
 private:
     int _epollFd;
 //    用vector主要是考虑到动态扩容 数组不能动态

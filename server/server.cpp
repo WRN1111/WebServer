@@ -15,6 +15,27 @@ Server::~Server() {
     _isClose = true;
 }
 
+//启动
+void Server::Start() {
+    if (!_isClose) printf("==================Start==========");
+    int eventCount = _epoll->Wait();
+    for (int i = 0; i < eventCount; i++) {
+        int fd = _epoll->GetEventFd(i);
+        uint32_t events = _epoll->GetEvents(i);
+        if (fd == _listenFd) {
+            _Listen();
+        } else if (events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {
+            _CloseConnection();
+        } else if (events | EPOLLIN) {
+            _Read();
+        } else if (events | EPOLLOUT) {
+            _Write();
+        } else {
+            perror("error!");
+        }
+    }
+}
+
 //创建监听FD
 bool Server::InitSocket() {
     int ret;
@@ -25,7 +46,7 @@ bool Server::InitSocket() {
     }
 //    初始化地址信息
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
+    addr.sin_port = htons(_port);
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 //    创建监听fd
@@ -77,4 +98,30 @@ bool Server::InitSocket() {
 //    设置非阻塞 以便accept时不阻塞
     fcntl(_listenFd, F_SETFL, fcntl(_listenFd, F_GETFD, 0) | O_NONBLOCK);
     return true;
+}
+
+void Server::AddClientFdToEpoll(int fd, sockaddr_in addr) {
+    _epoll->AddFd(fd, EPOLLIN | _connEvent);
+    fcntl(fd, F_SETFL, fcntl(fd, F_GETFD, 0) | O_NONBLOCK);
+}
+
+void Server::_Listen() {
+    struct sockaddr_in addr;
+    socklen_t len = sizeof addr;
+    do {
+        int fd = accept(_listenFd, (struct sockaddr *) &addr, &len);
+        AddClientFdToEpoll(fd, addr);
+    } while (_listenEvent & EPOLLET);
+}
+
+void Server::_Read() {
+
+}
+
+void Server::_Write() {
+
+}
+
+void Server::_CloseConnection() {
+
 }
