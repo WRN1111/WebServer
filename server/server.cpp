@@ -123,5 +123,6 @@ void Server::_Write() {
 }
 
 void Server::_CloseConnection() {
+    _epoll->DelFd()
 
 }
